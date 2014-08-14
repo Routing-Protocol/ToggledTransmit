@@ -22,8 +22,9 @@ implementation{
 	uint16_t new_counter;
 	
 	message_t pkt;
-	bool busy = FALSE;
 	
+	bool busy = FALSE;
+	bool acked = TRUE;
 	uint8_t node1 = 0x03;
 	uint8_t node2 = 0x04;
 	uint8_t node3 = 0x99;
@@ -61,8 +62,10 @@ implementation{
 	
 	event void Timer0.fired()
 	{
-		counter ++;
-		
+		if (acked)
+		{
+			counter ++;
+		}
 		if (!busy)
 		{
 			ToggledTransmitMsg* ttpkt = (ToggledTransmitMsg*)(call Packet.getPayload(&pkt, sizeof(ToggledTransmitMsg)));
@@ -106,6 +109,12 @@ implementation{
 		if (call PacketAcknowledgements.wasAcked(msg))
 		{
 			call AMControl.start();
+		}
+		
+		else
+		{
+			acked = FALSE;
+			call Timer0.startPeriodic(TIMER_PERIOD_MILLI);
 		}
 	}	
 	
